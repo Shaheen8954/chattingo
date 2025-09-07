@@ -1,0 +1,45 @@
+services:
+  dbservice:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=trainwithshubham@123
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  appservice:
+    build:
+      context: ./backend
+    depends_on:
+      dbservice:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      - spring.datasource.url=jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true
+      - spring.datasource.username=root
+      - spring.datasource.password=trainwithshubham@123
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.jpa.show-sql=true
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: http://localhost:8080
+    depends_on:
+      - appservice
+    ports:
+      - "80:80"
+
+volumes:
+  mysql-data:
