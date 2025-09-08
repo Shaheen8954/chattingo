@@ -23,7 +23,7 @@ import com.chattingo.config.CustomUserService;
 import com.chattingo.config.TokenProvider;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired

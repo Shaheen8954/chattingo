@@ -37,7 +37,9 @@ public class AppConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/**").authenticated()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtValidator, BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
@@ -50,7 +52,7 @@ public class AppConfig {
                         // Parse allowed origins from environment variable
                         String[] origins = allowedOrigins.split(",");
                         cfg.setAllowedOrigins(Arrays.asList(origins));
-                        cfg.setAllowedOriginPatterns(Arrays.asList(origins));
+                        cfg.setAllowedOriginPatterns(Arrays.asList("*"));
 
                         // Parse allowed methods from environment variable
                         String[] methods = allowedMethods.split(",");

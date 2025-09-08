@@ -11,7 +11,7 @@ import {
 // Action creator for user registration
 export const register = (data) => async (dispatch) => {
   try {
-    const res = await fetch(`${BASE_API_URL}/auth/signup`, {
+    const res = await fetch(`${BASE_API_URL}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -36,7 +36,7 @@ export const register = (data) => async (dispatch) => {
 // Action creator for user login
 export const login = (data) => async (dispatch) => {
   try {
-    const res = await fetch(`${BASE_API_URL}/auth/signin`, {
+    const res = await fetch(`${BASE_API_URL}/api/auth/signin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
