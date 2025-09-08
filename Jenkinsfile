@@ -5,9 +5,9 @@ pipeline {
     
     environment {
         DockerHubUser = 'shaheen8954'
-        ProjectName = 'chattingo'
+        ProjectName = 'chattingo-web'
         ImageTag = "${BUILD_NUMBER}"
-        Migration_Image_Name = 'chattingo-backend'
+        Migration_Image_Name = 'chattingo-app'
         Url = ('https://github.com/Shaheen8954/chattingo.git')
         Branch = "feature"
         PortNumber = 'chattingo.shaheen.homes'
