@@ -185,9 +185,14 @@ pipeline {
     
     post { 
         always { 
-            // Clean up
-            sh 'docker system prune -f || true'
-            archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
+            node {
+                script {
+                    // Clean up Docker resources
+                    sh 'docker system prune -f || true'
+                    // Archive any reports
+                    archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
+                }
+            }
         }
         success { 
             echo '✅ Deployment completed successfully!'
