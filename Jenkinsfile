@@ -33,6 +33,25 @@ pipeline {
             }
         }
         
+        stage('Prepare Backend Environment') {
+            steps {
+                script {
+                    dir('backend') {
+                        // Ensure .env file exists for the build
+                        sh '''
+                            if [ ! -f .env ]; then
+                                echo "Creating .env file from template..."
+                                cp .env .env.backup 2>/dev/null || true
+                                echo ".env file prepared for build"
+                            else
+                                echo ".env file already exists"
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+        
         stage('Build Backend Image') {
             steps {
                 script {
