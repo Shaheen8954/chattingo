@@ -146,6 +146,30 @@ pipeline {
             }
         }
         
+        stage('Prepare Environment') {
+            steps {
+                script {
+                    // Create backend directory if it doesn't exist
+                    sh '''
+                    mkdir -p backend
+                    
+                    # Create .env file with environment variables
+                    cat > backend/.env <<EOL
+                    SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/chattingo_db?createDatabaseIfNotExist=true
+                    SPRING_DATASOURCE_USERNAME=root
+                    SPRING_DATASOURCE_PASSWORD=test@123
+                    SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+                    SPRING_JPA_HIBERNATE_DDL_AUTO=update
+                    SPRING_JPA_SHOW_SQL=true
+                    EOL
+                    
+                    # Make sure the file has correct permissions
+                    chmod 600 backend/.env
+                    '''
+                }
+            }
+        }
+        
         stage('Deploy') {
             when {
                 // Only deploy if all previous stages were successful
@@ -153,7 +177,14 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'docker compose up -d'
+                    // Ensure .env exists in the root directory for docker-compose
+                    sh '''
+                    # Copy .env to root directory where docker-compose will look for it
+                    cp backend/.env ./.env || true
+                    
+                    # Run docker compose with the correct environment file
+                    docker compose --env-file backend/.env up -d
+                    '''
                 }
             }
         }
