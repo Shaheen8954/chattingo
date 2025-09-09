@@ -1,121 +1,100 @@
 @Library('Shared@main') _
 
-// ===========================================
-// Chattingo CI/CD Pipeline
-// ===========================================
-
 pipeline {
     agent any
     
     environment {
-        // Basic Configuration
         DockerHubUser = 'shaheen8954'
-        ProjectName = 'chattingo-web'
-        Migration_Image_Name = 'chattingo-app'
+        ProjectName = 'chattingo'
         ImageTag = "${BUILD_NUMBER}"
-        
-        // Git Configuration
-        GitUrl = 'https://github.com/Shaheen8954/chattingo.git'
-        Branch = 'feature'
-        
-        // Server Configuration
-        ServerUrl = 'chattingo.shaheen.homes'
-        
-        // Security Tools
+        Migration_Image_Name = 'chattingo-backend'
+        Url = ('https://github.com/Shaheen8954/chattingo.git')
+        Branch = "feature"
+        PortNumber = 'chattingo.shaheen.homes'
         TRIVY_VERSION = '0.50.0'
-        GITLEAKS_VERSION = '8.18.1'
-        
-        // Credentials
-        DOCKER_CREDS = credentials('docker-hub-credentials')
-        MYSQL_ROOT_PASSWORD = credentials('mysql-root-password')
-        JWT_SECRET = credentials('z9iomEpv/QtMfd2HTXnLzGt/7+R7I38m9k0T4L7GJa0=')
     }
 
     stages {
-        // Stage 1: Clean Workspace
-        stage('Clean Workspace') {
+        stage('Cleanup Workspace') {
             steps {
-                cleanWs()
+                script {
+                    cleanWs()
+                }
             }
         }
         
-        // Stage 2: Get Code
         stage('Clone Repository') {
             steps {
                 script {
-                    clone(env.GitUrl, env.Branch)
+                    clone(env.Url, env.Branch)
                 }
             }
         }
         
-        // Stage 3: Build Images
-        stage('Build Docker Images') {
-            parallel {
-                stage('Build Backend') {
-                    steps {
-                        script {
-                            dir('backend') {
-                                dockerbuild(env.DockerHubUser, env.Migration_Image_Name, env.ImageTag)
-                            }
-                        }
+        stage('Build Backend Image') {
+            steps {
+                script {
+                    dir('backend') {
+                        dockerbuild(env.DockerHubUser, env.Migration_Image_Name, env.ImageTag)
                     }
                 }
-                
-                stage('Build Frontend') {
-                    steps {
-                        script {
-                            dir('frontend') {
-                                dockerbuild(env.DockerHubUser, env.ProjectName, env.ImageTag)
-                            }
-                        }
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                script {
+                    dir('frontend') {
+                        dockerbuild(env.DockerHubUser, env.ProjectName, env.ImageTag)
                     }
                 }
             }
         }
         
-        // Stage 4: Security Scans
         stage('Security Scans') {
             parallel {
-                stage('Secrets Detection') {
+                stage('File System Security Scan') {
                     steps {
                         script {
                             try {
-                                sh """
-                                    # Install Gitleaks
-                                    wget -q -O gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz
+                                // Install and run Gitleaks for secrets detection
+                                sh '''
+                                    wget -q -O gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.18.1/gitleaks_8.18.1_linux_x64.tar.gz
                                     tar xf gitleaks.tgz gitleaks
                                     chmod +x gitleaks
-                                    
-                                    # Run Gitleaks
+                                    # Run gitleaks with our config file
                                     if [ -f .gitleaks.toml ]; then
                                         ./gitleaks detect --source . --report-format sarif --report-path gitleaks-report.json --config .gitleaks.toml || true
                                     else
                                         ./gitleaks detect --source . --report-format sarif --report-path gitleaks-report.json || true
                                     fi
                                     rm -f gitleaks.tgz gitleaks
-                                """
+                                '''
+                                // Archive the report whether it found issues or not
                                 archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
                                 
+                                // Check if there are any findings and warn instead of failing
                                 def findings = sh(script: 'if [ -s gitleaks-report.json ]; then echo "true"; else echo "false"; fi', returnStdout: true).trim()
                                 if (findings == "true") {
-                                    unstable("⚠️ Potential secrets found in code. Check gitleaks-report.json for details.")
+                                    unstable("Potential secrets found in code. Check the archived gitleaks-report.json for details.")
                                 }
                             } catch (Exception e) {
-                                echo "⚠️ Warning: File system security scan failed: ${e.message}"
+                                echo "Warning: File system security scan failed: ${e.message}"
+                                // Continue the build even if the scan fails
                                 currentBuild.result = 'UNSTABLE'
                             }
                         }
                     }
                 }
                 
-                stage('Container Scan') {
+                stage('Trivy Image Scan') {
                     steps {
                         script {
                             try {
-                                sh """
-                                    # Install Trivy
+                                // Install Trivy if not already installed
+                                sh '''
                                     if ! command -v trivy &> /dev/null; then
-                                        wget -q https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb
+                                        wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.deb
                                         sudo dpkg -i trivy_${TRIVY_VERSION}_Linux-64bit.deb || true
                                         rm -f trivy_${TRIVY_VERSION}_Linux-64bit.deb
                                     fi
@@ -123,14 +102,19 @@ pipeline {
                                     # Create reports directory
                                     mkdir -p trivy-reports
                                     
-                                    # Scan images
+                                    # Scan backend image
                                     trivy image --format template --template "@/usr/local/share/trivy/templates/html.tpl" -o trivy-reports/backend-report.html ${DockerHubUser}/${Migration_Image_Name}:${ImageTag} || true
+                                    
+                                    # Scan frontend image
                                     trivy image --format template --template "@/usr/local/share/trivy/templates/html.tpl" -o trivy-reports/frontend-report.html ${DockerHubUser}/${ProjectName}:${ImageTag} || true
-                                """
+                                '''
+                                
+                                // Archive the reports
                                 archiveArtifacts artifacts: 'trivy-reports/*.html', allowEmptyArchive: true
                                 
                             } catch (Exception e) {
-                                echo "⚠️ Warning: Container scan failed: ${e.message}"
+                                echo "Warning: Trivy scan failed: ${e.message}"
+                                // Continue the build even if the scan fails
                                 currentBuild.result = 'UNSTABLE'
                             }
                         }
@@ -139,20 +123,20 @@ pipeline {
             }
         }
         
-        // Stage 5: Push Images
         stage('Push Docker Images') {
             when {
+                // Only push if security scans didn't fail completely
                 expression { currentBuild.result != 'FAILURE' }
             }
             parallel {
-                stage('Push Backend') {
+                stage('Push Backend Image') {
                     steps {
                         script {
                             dockerpush(env.DockerHubUser, env.Migration_Image_Name, env.ImageTag)
                         }
                     }
                 }
-                stage('Push Frontend') {
+                stage('Push Frontend Image') {
                     steps {
                         script {
                             dockerpush(env.DockerHubUser, env.ProjectName, env.ImageTag)
@@ -162,21 +146,13 @@ pipeline {
             }
         }
         
-        // Stage 6: Deploy
-        stage('Deploy Application') {
+        stage('Deploy') {
             when {
+                // Only deploy if all previous stages were successful
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
             }
             steps {
                 script {
-                    // Update docker-compose with the new image tags
-                    sh """
-                        sed -i 's|image: .*/chattingo-app:.*|image: ${DockerHubUser}/chattingo-app:${ImageTag}|' docker-compose.yml
-                        sed -i 's|image: .*/chattingo-web:.*|image: ${DockerHubUser}/chattingo-web:${ImageTag}|' docker-compose.yml
-                        sed -i 's|MYSQL_ROOT_PASSWORD:.*|MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}|' docker-compose.yml
-                    """
-                    
-                    // Deploy the application
                     sh 'docker compose up -d'
                 }
             }
@@ -185,23 +161,20 @@ pipeline {
     
     post { 
         always { 
-            node {
-                script {
-                    // Clean up Docker resources
-                    sh 'docker system prune -f || true'
-                    // Archive any reports
-                    archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
-                }
-            }
+            // Archive any remaining artifacts
+            archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
+            
+            // Clean up
+            sh 'docker system prune -f || true'
         }
         success { 
-            echo '✅ Deployment completed successfully!'
+            echo 'Deployment completed successfully!'
         } 
         failure { 
-            echo '❌ Deployment failed. Check the logs for details.'
+            echo 'Deployment failed. Please check the logs for more details.'
         }
         unstable {
-            echo '⚠️ Build completed with warnings. Check security scan reports.'
+            echo 'Build completed with warnings. Please check the security scan reports.'
         }
     }  
 }
