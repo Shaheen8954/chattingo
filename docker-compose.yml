@@ -18,7 +18,7 @@ services:
       retries: 20
 
   appservice:
-    image: shaheen8954/chattingo-backend:83
+    image: shaheen8954/chattingo-backend:84
     container_name: chattingo-app
     depends_on:
       dbservice:
@@ -41,7 +41,7 @@ services:
       - appnet
 
   web:
-    image: shaheen8954/chattingo-frontend:83
+    image: shaheen8954/chattingo-frontend:84
     container_name: chattingo-web
     depends_on:
       - appservice
