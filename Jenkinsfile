@@ -232,7 +232,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "Starting deployment with updated docker-compose.yml..."
+                        // echo "Starting deployment with updated docker-compose.yml..."
                         
                         // # Ensure persistent cert directories exist and create dummy certs if missing
                         // mkdir -p certbot/conf/live/chattingo.shaheen.homes certbot/www
@@ -254,7 +254,7 @@ pipeline {
                         // # Reload nginx to pick up any new certs
                         // docker compose restart nginx || true
 
-                        echo "Deployment completed!"
+                        // echo "Deployment completed!"
                     '''
                 }
             }
