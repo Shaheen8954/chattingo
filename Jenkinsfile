@@ -261,22 +261,22 @@ pipeline {
         }
     }
     
-    post { 
-        always { 
-            // Archive any remaining artifacts
-            archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
+    // post { 
+    //     always { 
+    //         // Archive any remaining artifacts
+    //         archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
             
-            // Clean up
-            sh 'docker system prune -f || true'
-        }
-        success { 
-            echo 'Deployment completed successfully!'
-        } 
-        failure { 
-            echo 'Deployment failed. Please check the logs for more details.'
-        }
-        unstable {
-            echo 'Build completed with warnings. Please check the security scan reports.'
-        }
-    }  
+    //         // Clean up
+    //         sh 'docker system prune -f || true'
+    //     }
+    //     success { 
+    //         echo 'Deployment completed successfully!'
+    //     } 
+    //     failure { 
+    //         echo 'Deployment failed. Please check the logs for more details.'
+    //     }
+    //     unstable {
+    //         echo 'Build completed with warnings. Please check the security scan reports.'
+    //     }
+    // }  
 }
