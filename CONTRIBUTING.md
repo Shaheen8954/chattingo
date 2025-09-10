@@ -331,7 +331,7 @@ curl -I https://yourdomain.com
 # Test user registration
 curl -X POST https://yourdomain.com/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"fullName":"Test User","email":"test@example.com","password":"password123"}'
+  -d '{"fullName":"Test User","email":"test@example.com","password":"<your password>"}'
 
 # Open in browser and test chat functionality
 # https://yourdomain.com
