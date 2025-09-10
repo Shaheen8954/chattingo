@@ -113,7 +113,7 @@ mysql -u root -p
 
 # Create database and user
 CREATE DATABASE chattingo_db;
-CREATE USER 'chattingo'@'localhost' IDENTIFIED BY 'password123';
+CREATE USER 'chattingo'@'localhost' IDENTIFIED BY '<yourpassword>';
 GRANT ALL PRIVILEGES ON chattingo_db.* TO 'chattingo'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
@@ -134,7 +134,7 @@ openssl rand -base64 32
 
 # Edit .env file with your configuration:
 # JWT_SECRET=<your-generated-secret>
-# SPRING_DATASOURCE_PASSWORD=password123
+# SPRING_DATASOURCE_PASSWORD=<yourpassword>
 # Or leave empty if using root without password
 ```
 
@@ -307,7 +307,7 @@ curl -X POST http://localhost:8080/auth/signup \
   -d '{
     "fullName": "Test User",
     "email": "test@example.com", 
-    "password": "password123"
+    "password": "<yourpassword>"
   }'
 
 # Test user login
@@ -315,7 +315,7 @@ curl -X POST http://localhost:8080/auth/signin \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
-    "password": "password123"
+    "password": "<yourpassword>"
   }'
 
 # Test protected endpoint (replace TOKEN with actual JWT)
@@ -554,7 +554,7 @@ curl -I https://yourdomain.com
 # Test user registration
 curl -X POST https://yourdomain.com/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"fullName":"Test User","email":"test@example.com","password":"password123"}'
+  -d '{"fullName":"Test User","email":"test@example.com","password":"<yourpassword>"}'
 
 # Open in browser and test chat functionality
 # https://yourdomain.com
