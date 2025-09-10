@@ -15,7 +15,6 @@ pipeline {
 
     stages {
         stage('Check skip-ci') {
-            when { beforeAgent true }
             steps {
                 scmSkip(deleteBuild: true, skipPattern: '.*\\[skip ci\\].*')
             }
