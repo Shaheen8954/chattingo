@@ -168,39 +168,41 @@ pipeline {
             }
             steps {
                 script {
-                    sh '''
-                        echo "Updating docker-compose.yml with new image tags..."
-                        
-                        # Update backend image tag
-                        sed -i "s|image: \${DockerHubUser}/chattingo-backend:\${ImageTag}|image: ${DockerHubUser}/chattingo-backend:${ImageTag}|g" docker-compose.yml
-                        echo "Updated backend image tag"
-                        
-                        # Update frontend image tag  
-                        sed -i "s|image: \${DockerHubUser}/chattingo-frontend:\${ImageTag}|image: ${DockerHubUser}/chattingo-frontend:${ImageTag}|g" docker-compose.yml
-                        echo "Updated frontend image tag"
-                        
-                        # Verify the changes
-                        echo "Updated docker-compose.yml image references:"
-                        grep -E "image:" docker-compose.yml
-                        
-                        
-                        # Configure Git for Jenkins CI
-                        git config user.email "jenkins@${JOB_NAME}@shaheen.com" || true
-                        git config user.name "Jenkins CI" || true
-                        
-                        # Check if there are changes to commit
-                        if git diff --quiet docker-compose.yml; then
-                            echo "No changes to commit in docker-compose.yml"
-                        else
-                            # Commit changes with [skip ci] to avoid webhook trigger
-                            git add docker-compose.yml
-                            git commit -m "chore: update image tags to ${ImageTag} [skip ci]"
-                            git push origin ${Branch}
-                            echo "Docker Compose file updated and committed to GitHub with [skip ci]!"
-                        fi
-                        
-                        echo "Docker Compose file update completed successfully!"
-                                           '''
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                        sh '''
+                            echo "Updating docker-compose.yml with new image tags..."
+
+                            # Replace placeholder form → pinned
+                            sed -i "s|image: \\${DockerHubUser}/chattingo-backend:\\${ImageTag}|image: ${DockerHubUser}/chattingo-backend:${ImageTag}|g" docker-compose.yml
+                            sed -i "s|image: \\${DockerHubUser}/chattingo-frontend:\\${ImageTag}|image: ${DockerHubUser}/chattingo-frontend:${ImageTag}|g" docker-compose.yml
+
+                            # Replace already-pinned tags → new tag (tag part only)
+                            sed -E -i "s|(image:\\s*)${DockerHubUser}/chattingo-backend:([[:alnum:]_.-]+)|\\1${DockerHubUser}/chattingo-backend:${ImageTag}|g" docker-compose.yml
+                            sed -E -i "s|(image:\\s*)${DockerHubUser}/chattingo-frontend:([[:alnum:]_.-]+)|\\1${DockerHubUser}/chattingo-frontend:${ImageTag}|g" docker-compose.yml
+
+                            echo "Updated docker-compose.yml image references:"
+                            grep -E "^\\s*image:" docker-compose.yml
+
+                            # Configure Git identity
+                            git config user.email "jenkins@${JOB_NAME}@shaheen.com" || true
+                            git config user.name "Jenkins CI" || true
+
+                            # Ensure authenticated remote
+                            git remote set-url origin https://${GIT_USER}:${GIT_PASS}@github.com/Shaheen8954/chattingo.git || true
+
+                            # Commit only if file changed
+                            if git diff --quiet docker-compose.yml; then
+                                echo "No changes to commit in docker-compose.yml"
+                            else
+                                git add docker-compose.yml
+                                git commit -m "chore: pin compose images to ${ImageTag} [skip ci]"
+                                git push origin ${Branch}
+                                echo "Docker Compose file updated and committed to GitHub with [skip ci]!"
+                            fi
+
+                            echo "Docker Compose file update completed successfully!"
+                        '''
+                    }
                 }
             }
         }
@@ -215,7 +217,10 @@ pipeline {
                     withCredentials([
                         string(credentialsId: 'SPRING_DATASOURCE_PASSWORD', variable: 'J_SPRING_DB_PWD'),
                         string(credentialsId: 'jwt-secret',                variable: 'J_JWT_SECRET'),
-                        string(credentialsId: 'mysql-root-password',       variable: 'J_MYSQL_ROOT_PWD')
+                        string(credentialsId: 'mysql-root-password',       variable: 'J_MYSQL_ROOT_PWD'),
+                        string(credentialsId: 'SPRING_PROFILES_ACTIVE',     variable: 'J_PROFILES'),
+                        string(credentialsId: 'SERVER_PORT',                variable: 'J_SERVER_PORT'),
+                        string(credentialsId: 'WEBSOCKET_ENDPOINT',         variable: 'J_WS_EP')
                     ]) {
                         sh '''
                             # Export runtime secrets for docker compose
@@ -223,6 +228,9 @@ pipeline {
                             export SPRING_DATASOURCE_PASSWORD="${J_SPRING_DB_PWD}"
                             export SPRING_DATASOURCE_USERNAME="root"
                             export SPRING_DATASOURCE_URL="jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true"
+                            export SPRING_PROFILES_ACTIVE="${J_PROFILES}"
+                            export SERVER_PORT="${J_SERVER_PORT}"
+                            export WEBSOCKET_ENDPOINT="${J_WS_EP}"
                             export MYSQL_ROOT_PASSWORD="${J_MYSQL_ROOT_PWD}"
                             export MYSQL_DATABASE="chattingo_db"
 
