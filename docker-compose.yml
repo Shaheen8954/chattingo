@@ -18,7 +18,7 @@ services:
       retries: 20
 
   appservice:
-    image: ${DockerHubUser}/chattingo-app:${ImageTag}
+    image: ${DockerHubUser}/chattingo-backend:${ImageTag}
     container_name: chattingo-app
     depends_on:
       dbservice:
@@ -28,7 +28,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATASOURCE_PASSWORD: chattingo123
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
@@ -36,7 +36,7 @@ services:
       - appnet
 
   web:
-    image: ${DockerHubUser}/chattingo-web:${ImageTag}
+    image: ${DockerHubUser}/chattingo-frontend:${ImageTag}
     container_name: chattingo-web
     depends_on:
       - appservice

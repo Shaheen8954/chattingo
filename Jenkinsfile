@@ -66,7 +66,7 @@ pipeline {
             steps {
                 script {
                     dir('frontend') {
-                        dockerbuild(env.DockerHubUser, env.ProjectName, env.ImageTag)
+                        dockerbuild(env.DockerHubUser, 'chattingo-frontend', env.ImageTag)
                     }
                 }
             }
@@ -137,7 +137,7 @@ pipeline {
                                     scan_image "${DockerHubUser}/${Migration_Image_Name}:${ImageTag}" "backend-report.html"
                                     
                                     # Scan frontend image
-                                    scan_image "${DockerHubUser}/${ProjectName}:${ImageTag}" "frontend-report.html"
+                                    scan_image "${DockerHubUser}/chattingo-frontend:${ImageTag}" "frontend-report.html"
                                     
                                     echo "Trivy scanning completed. Reports generated:"
                                     ls -la trivy-reports/
@@ -173,7 +173,7 @@ pipeline {
                 stage('Push Frontend Image') {
                     steps {
                         script {
-                            dockerpush(env.DockerHubUser, env.ProjectName, env.ImageTag)
+                            dockerpush(env.DockerHubUser, 'chattingo-frontend', env.ImageTag)
                         }
                     }
                 }
@@ -191,11 +191,11 @@ pipeline {
                         echo "Updating docker-compose.yml with new image tags..."
                         
                         # Update backend image tag
-                        sed -i "s|image: \${DockerHubUser}/chattingo-app:\${ImageTag}|image: ${DockerHubUser}/chattingo-backend:${ImageTag}|g" docker-compose.yml
+                        sed -i "s|image: \${DockerHubUser}/chattingo-backend:\${ImageTag}|image: ${DockerHubUser}/chattingo-backend:${ImageTag}|g" docker-compose.yml
                         echo "Updated backend image tag"
                         
                         # Update frontend image tag  
-                        sed -i "s|image: \${DockerHubUser}/chattingo-web:\${ImageTag}|image: ${DockerHubUser}/chattingo:${ImageTag}|g" docker-compose.yml
+                        sed -i "s|image: \${DockerHubUser}/chattingo-frontend:\${ImageTag}|image: ${DockerHubUser}/chattingo-frontend:${ImageTag}|g" docker-compose.yml
                         echo "Updated frontend image tag"
                         
                         # Verify the changes
