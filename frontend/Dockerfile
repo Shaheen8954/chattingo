@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# ==================== Build stage ==========================
+# ==================== Dependencies stage ==========================
 # ------------------------------------------------------------
     FROM node:18-alpine AS deps
     WORKDIR /app
@@ -7,7 +7,7 @@
     RUN npm install --no-audit --no-fund
     
     # ------------------------------------------------------------
-    # ==================== Runtime stage =========================
+    # ==================== Build stage =========================
     # ------------------------------------------------------------
     
     FROM node:18-alpine AS build
@@ -20,11 +20,11 @@
     RUN npm run build
     
     # ------------------------------------------------------------
-    # ==================== Deploy stage ==========================
+    # ==================== Runtime stage ==========================
     # ------------------------------------------------------------
     FROM nginx:alpine AS runtime
     COPY --from=build /app/build /usr/share/nginx/html
-    # Simple nginx config for SPA
+    # Simple nginx config for SPA(Single Page Application)
     COPY public/nginx.conf /etc/nginx/conf.d/default.conf
     EXPOSE 80
     CMD ["nginx","-g","daemon off;"]

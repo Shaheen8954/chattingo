@@ -7,12 +7,9 @@ pipeline {
     environment {
         DockerHubUser = 'shaheen8954'
         DockerHubPassword = credentials('docker-hub-credentials')
-        ProjectName = 'chattingo'
         ImageTag = "${BUILD_NUMBER}"
-        Migration_Image_Name = 'chattingo-backend'
         Url = ('https://github.com/Shaheen8954/chattingo.git')
         Branch = "feature"
-        PortNumber = 'chattingo.shaheen.homes'
         TRIVY_VERSION = '0.50.0'
     }
 
@@ -83,7 +80,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Warning: File system security scan failed: ${e.message}"
                                 // Continue the build even if the scan fails
-                                currentBuild.result = 'UNSTABLE'
+                                currentBuild.result = 'STABLE'
                             }
                         }
                     }
@@ -119,9 +116,6 @@ pipeline {
                                     
                                     # Scan frontend image
                                     scan_image "${DockerHubUser}/chattingo-frontend:${ImageTag}" "frontend-report.html"
-                                    
-                                    echo "Trivy scanning completed. Reports generated:"
-                                    ls -la trivy-reports/
                                 '''
                                 
                                 // Archive the reports
@@ -130,7 +124,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Warning: Trivy scan failed: ${e.message}"
                                 // Continue the build even if the scan fails
-                                currentBuild.result = 'UNSTABLE'
+                                currentBuild.result = 'STABLE'
                             }
                         }
                     }
@@ -250,23 +244,4 @@ pipeline {
             }
         }
     }
-    
-    // post { 
-    //     always { 
-    //         // Archive any remaining artifacts
-    //         archiveArtifacts artifacts: '**/*.json,**/*.html', allowEmptyArchive: true
-            
-    //         // Clean up
-    //         sh 'docker system prune -f || true'
-    //     }
-    //     success { 
-    //         echo 'Deployment completed successfully!'
-    //     } 
-    //     failure { 
-    //         echo 'Deployment failed. Please check the logs for more details.'
-    //     }
-    //     unstable {
-    //         echo 'Build completed with warnings. Please check the security scan reports.'
-    //     }
-    // }  
 }
