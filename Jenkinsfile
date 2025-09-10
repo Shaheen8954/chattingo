@@ -232,29 +232,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        // echo "Starting deployment with updated docker-compose.yml..."
-                        
-                        // # Ensure persistent cert directories exist and create dummy certs if missing
-                        // mkdir -p certbot/conf/live/chattingo.shaheen.homes certbot/www
-                        // if [ ! -f certbot/conf/live/chattingo.shaheen.homes/fullchain.pem ] || [ ! -f certbot/conf/live/chattingo.shaheen.homes/privkey.pem ]; then
-                        //   echo "No certs found; creating 1-day self-signed cert to allow nginx startup..."
-                        //   openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-                        //     -keyout certbot/conf/live/chattingo.shaheen.homes/privkey.pem \
-                        //     -out certbot/conf/live/chattingo.shaheen.homes/fullchain.pem \
-                        //     -subj "/CN=${PortNumber}"
-                        // fi
-
                         # Deploy with updated docker-compose.yml
+                        docker compose down
                         docker compose up -d
-
-                        // # Attempt real certificate issuance (non-fatal if it fails)
-                        // echo "Attempting Let's Encrypt issuance via certbot..."
-                        // docker compose run --rm certbot || true
-
-                        // # Reload nginx to pick up any new certs
-                        // docker compose restart nginx || true
-
-                        // echo "Deployment completed!"
+                        echo "Deployment completed!"
                     '''
                 }
             }
