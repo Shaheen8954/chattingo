@@ -233,7 +233,6 @@ pipeline {
                 script {
                     sh '''
                         # Deploy with updated docker-compose.yml
-                        docker compose down
                         docker compose up -d
                         echo "Deployment completed!"
                     '''
