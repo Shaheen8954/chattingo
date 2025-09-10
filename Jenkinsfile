@@ -33,30 +33,11 @@ pipeline {
             }
         }
         
-        stage('Prepare Backend Environment') {
-            steps {
-                script {
-                    dir('backend') {
-                        // Ensure .env file exists for the build
-                        sh '''
-                            if [ ! -f .env ]; then
-                                echo "Creating .env file from template..."
-                                cp .env .env.backup 2>/dev/null || true
-                                echo ".env file prepared for build"
-                            else
-                                echo ".env file already exists"
-                            fi
-                        '''
-                    }
-                }
-            }
-        }
-        
         stage('Build Backend Image') {
             steps {
                 script {
                     dir('backend') {
-                        dockerbuild(env.DockerHubUser, env.Migration_Image_Name, env.ImageTag)
+                        dockerbuild(env.DockerHubUser, 'chattingo-backend', env.ImageTag)
                     }
                 }
             }
@@ -166,7 +147,7 @@ pipeline {
                 stage('Push Backend Image') {
                     steps {
                         script {
-                            dockerpush(env.DockerHubUser, env.Migration_Image_Name, env.ImageTag)
+                            dockerpush(env.DockerHubUser, 'chattingo-backend', env.ImageTag)
                         }
                     }
                 }
@@ -231,11 +212,32 @@ pipeline {
             }
             steps {
                 script {
-                    sh '''
-                        # Deploy with updated docker-compose.yml
-                        docker compose up -d
-                        echo "Deployment completed!"
-                    '''
+                    withCredentials([
+                        string(credentialsId: 'SPRING_DATASOURCE_PASSWORD', variable: 'J_SPRING_DB_PWD'),
+                        string(credentialsId: 'jwt-secret',                variable: 'J_JWT_SECRET'),
+                        string(credentialsId: 'mysql-root-password',       variable: 'J_MYSQL_ROOT_PWD')
+                    ]) {
+                        sh '''
+                            # Export runtime secrets for docker compose
+                            export JWT_SECRET="${J_JWT_SECRET}"
+                            export SPRING_DATASOURCE_PASSWORD="${J_SPRING_DB_PWD}"
+                            export SPRING_DATASOURCE_USERNAME="root"
+                            export SPRING_DATASOURCE_URL="jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true"
+                            export MYSQL_ROOT_PASSWORD="${J_MYSQL_ROOT_PWD}"
+                            export MYSQL_DATABASE="chattingo_db"
+
+                            export CORS_ALLOWED_ORIGINS="http://chattingo.shaheen.homes,https://chattingo.shaheen.homes,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001"
+                            export CORS_ALLOWED_METHODS="GET,POST,PUT,DELETE,OPTIONS,PATCH"
+                            export CORS_ALLOWED_HEADERS="*"
+
+                            # Ensure latest images for provided tags
+                            docker compose pull || true
+
+                            # Deploy with updated docker-compose.yml
+                            docker compose up -d
+                            echo "Deployment completed!"
+                        '''
+                    }
                 }
             }
         }
