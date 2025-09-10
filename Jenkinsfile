@@ -14,6 +14,13 @@ pipeline {
     }
 
     stages {
+        stage('Check skip-ci') {
+            when { beforeAgent true }
+            steps {
+                scmSkip(deleteBuild: true, skipPattern: '.*\\[skip ci\\].*')
+            }
+        }
+        
         stage('Cleanup Workspace') {
             steps {
                 script {
@@ -235,6 +242,9 @@ pipeline {
                             # Ensure latest images for provided tags
                             docker compose pull || true
 
+                            # Stop all containers
+                            docker compose down || true
+                            
                             # Deploy with updated docker-compose.yml
                             docker compose up -d
                             echo "Deployment completed!"
