@@ -18,7 +18,7 @@ services:
       retries: 20
 
   appservice:
-    image: ${DockerHubUser}/chattingo-backend:${ImageTag}
+    image: shaheen8954/chattingo-backend:55
     container_name: chattingo-app
     depends_on:
       dbservice:
@@ -41,7 +41,7 @@ services:
       - appnet
 
   web:
-    image: ${DockerHubUser}/chattingo-frontend:${ImageTag}
+    image: shaheen8954/chattingo-frontend:55
     container_name: chattingo-web
     depends_on:
       - appservice
