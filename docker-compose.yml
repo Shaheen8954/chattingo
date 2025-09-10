@@ -3,8 +3,8 @@ services:
     image: mysql:8.0
     container_name: chattingo-db
     environment:
-      MYSQL_ROOT_PASSWORD: chattingo123
-      MYSQL_DATABASE: chattingo_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-chattingo_db}
     ports:
       - "3308:3306"
     networks:
@@ -23,15 +23,17 @@ services:
     depends_on:
       dbservice:
         condition: service_healthy
-    env_file:
-      - ./backend/.env
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: chattingo123
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:mysql://dbservice:3306/chattingo_db?createDatabaseIfNotExist=true}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-root}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "false"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://chattingo.shaheen.homes,https://chattingo.shaheen.homes}
+      CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS:-GET,POST,PUT,DELETE,OPTIONS,PATCH}
+      CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS:-*}
     networks:
       - appnet
 
