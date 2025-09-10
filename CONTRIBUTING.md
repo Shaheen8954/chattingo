@@ -129,12 +129,12 @@ npm start
 # Test signup
 curl -X POST http://localhost:8080/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"fullName":"Test User","email":"test@example.com","password":"password123"}'
+  -d '{"fullName":"Test User","email":"test@example.com","password":"<your password>"}'
 
 # Test login
 curl -X POST http://localhost:8080/auth/signin \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+  -d '{"email":"test@example.com","password":"<your password>"}'
 ```
 
 ### Common Issues & Solutions
