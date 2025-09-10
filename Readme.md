@@ -1,4 +1,4 @@
-# 🚀 Chattingo - Production-Ready Real-Time Chat Application
+# Chattingo - Production-Ready Real-Time Chat Application
 
 ## **Client Handover Documentation**
 
@@ -6,7 +6,7 @@ A fully containerized, production-deployed real-time chat application with autom
 
 ---
 
-## 📋 **Production Deployment Information**
+## **Production Deployment Information**
 
 ### **Live Application**
 - **URL**: https://chattingo.shaheen.homes
@@ -22,7 +22,7 @@ A fully containerized, production-deployed real-time chat application with autom
 
 ---
 
-## 🏗️ **System Architecture**
+## **System Architecture**
 
 ```
 Internet (HTTPS) → Nginx Proxy → [Frontend + Backend + Database]
@@ -43,7 +43,7 @@ Internet (HTTPS) → Nginx Proxy → [Frontend + Backend + Database]
 
 ---
 
-## 🛠️ **Technology Stack**
+## **Technology Stack**
 
 ### **Frontend**
 - **React 18** - Modern UI framework
@@ -68,7 +68,7 @@ Internet (HTTPS) → Nginx Proxy → [Frontend + Backend + Database]
 
 ---
 
-## 📱 **Application Features**
+## **Application Features**
 
 ### **Core Functionality**
 - ✅ User registration & authentication (JWT)
@@ -103,7 +103,7 @@ WS     /ws                   - WebSocket endpoint
 
 ---
 
-## 🚀 **Deployment & Operations**
+## **Deployment & Operations**
 
 ### **Current Deployment**
 ```bash
@@ -136,7 +136,7 @@ CORS_ALLOWED_ORIGINS=https://chattingo.shaheen.homes
 
 ---
 
-## 📋 **Configuration Files Explained**
+## **Configuration Files Explained**
 
 ### **Frontend Dockerfile**
 ```dockerfile
@@ -457,7 +457,7 @@ pipeline {
 
 ---
 
-## 🔧 **Maintenance & Operations**
+##  **Maintenance & Operations**
 
 ### **Server Access**
 ```bash
@@ -494,7 +494,7 @@ docker-compose logs -f nginx
 
 ---
 
-## 🔄 **CI/CD Pipeline**
+##  **CI/CD Pipeline**
 
 ### **Jenkins Pipeline**
 - **Repository**: https://github.com/Shaheen8954/chattingo.git
@@ -521,7 +521,7 @@ docker-compose logs -f nginx
 
 ---
 
-## 📊 **Project Structure**
+## **Project Structure**
 
 ```
 chattingo/
@@ -581,7 +581,7 @@ docker-compose exec certbot certbot certificates
 
 ---
 
-**🎯 Application is production-ready and fully operational at https://chattingo.shaheen.homes**
+** Application is production-ready and fully operational at https://chattingo.shaheen.homes**
 
 *For technical support or questions, refer to the deployment logs and monitoring dashboards.*
 
