@@ -9,7 +9,7 @@ A fully containerized, production-deployed real-time chat application with autom
 ## **Production Deployment Information**
 
 ### **Live Application**
-- **URL**: https://chattingo.shaheen.homes
+- **[URL](https://chattingo.shaheen.homes)**: https://chattingo.shaheen.homes
 - **Status**: ✅ Production Ready
 - **SSL Certificate**: Let's Encrypt (Auto-renewal configured)
 - **Deployment Date**: September 2024
