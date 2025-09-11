@@ -21,10 +21,18 @@ pipeline {
         stage('Preflight - Skip') {
             steps {
                 script {
-                    def msgs = currentBuild.changeSets.collectMany { cs -> cs.items*.msg }.join('\n')
-                    def authors = currentBuild.changeSets.collectMany { cs -> cs.items*.author?.fullName }.findAll { it }.unique()
+                    def msgList = []
+                    def authorList = []
                     def files = []
-                    currentBuild.changeSets.each { cs -> cs.items.each { it.affectedFiles.each { files << it.path } } }
+                    currentBuild.changeSets.each { cs ->
+                        for (entry in cs.items) {
+                            try { msgList << (entry.msg ?: '') } catch (ignored) { }
+                            try { if (entry.author && entry.author.fullName) { authorList << entry.author.fullName } } catch (ignored) { }
+                            try { entry.affectedFiles.each { f -> if (f?.path) { files << f.path } } } catch (ignored) { }
+                        }
+                    }
+                    def msgs = msgList.join('\n')
+                    def authors = authorList.unique()
 
                     if (msgs =~ /(?i)\[skip ci\]/) {
                         echo 'Skip: [skip ci]'
