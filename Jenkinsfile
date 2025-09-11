@@ -4,6 +4,10 @@
 pipeline {
     agent any
     
+    options {
+        skipStagesAfterUnstable()
+    }
+
     environment {
         DockerHubUser = 'shaheen8954'
         DockerHubPassword = credentials('docker-hub-credentials')
@@ -24,14 +28,14 @@ pipeline {
 
                     if (msgs =~ /(?i)\[skip ci\]/) {
                         echo 'Skip: [skip ci]'
-                        currentBuild.result = 'NOT_BUILT'
-                        error('SKIP')
+                        unstable('Preflight: [skip ci] present')
+                        return
                     }
 
                     if (authors.any { it.equalsIgnoreCase('Jenkins CI') || it.endsWith('[bot]') }) {
                         echo "Skip: bot ${authors}"
-                        currentBuild.result = 'NOT_BUILT'
-                        error('SKIP')
+                        unstable('Preflight: bot author commit')
+                        return
                     }
 
                     def relevant = files.any { p ->
@@ -40,8 +44,8 @@ pipeline {
                     }
                     if (!relevant) {
                         echo 'Skip: no relevant file changes'
-                        currentBuild.result = 'NOT_BUILT'
-                        error('SKIP')
+                        unstable('Preflight: no relevant file changes')
+                        return
                     }
                 }
             }
