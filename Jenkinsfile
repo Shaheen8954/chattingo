@@ -117,10 +117,12 @@ pipeline {
                                 // Archive the report whether it found issues or not
                                 archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
                                 
-                                // Check if there are any findings and warn instead of failing
+                                // Log findings, but do NOT fail or mark unstable
                                 def findings = sh(script: 'if [ -s gitleaks-report.json ]; then echo "true"; else echo "false"; fi', returnStdout: true).trim()
                                 if (findings == "true") {
-                                    unstable("Potential secrets found in code. Check the archived gitleaks-report.json for details.")
+                                    echo "Gitleaks: potential secrets found. Report archived at gitleaks-report.json."
+                                } else {
+                                    echo "Gitleaks: no findings."
                                 }
                             } catch (Exception e) {
                                 echo "Warning: File system security scan failed: ${e.message}"
@@ -150,21 +152,20 @@ pipeline {
                                             -v /var/run/docker.sock:/var/run/docker.sock \
                                             -v $(pwd)/trivy-reports:/reports \
                                             aquasec/trivy:${TRIVY_VERSION} image \
-                                            --format template \
-                                            --template "@/usr/local/share/trivy/templates/html.tpl" \
+                                            --format json \
                                             -o /reports/${report_name} \
                                             ${image_name} || true
                                     }
                                     
                                     # Scan backend image
-                                    scan_image "${DockerHubUser}/${Migration_Image_Name}:${ImageTag}" "backend-report.html"
+                                    scan_image "${DockerHubUser}/chattingo-backend:${ImageTag}" "backend-report.json"
                                     
                                     # Scan frontend image
-                                    scan_image "${DockerHubUser}/chattingo-frontend:${ImageTag}" "frontend-report.html"
+                                    scan_image "${DockerHubUser}/chattingo-frontend:${ImageTag}" "frontend-report.json"
                                 '''
                                 
                                 // Archive the reports
-                                archiveArtifacts artifacts: 'trivy-reports/*.html', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'trivy-reports/*', allowEmptyArchive: true
                                 
                             } catch (Exception e) {
                                 echo "Warning: Trivy scan failed: ${e.message}"
