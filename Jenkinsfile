@@ -181,7 +181,7 @@ pipeline {
         stage('Push Docker Images') {
             when {
                 allOf {
-                    anyOf { branch 'main'; branch 'develop' }
+                    anyOf { branch 'main'; branch 'develop'; branch 'feature' }
                     // Only push if Docker login was successful
                     expression { currentBuild.result != 'FAILURE' }
                 }
@@ -207,7 +207,7 @@ pipeline {
         stage('Update Docker Compose') {
             when {
                 allOf {
-                    anyOf { branch 'main'; branch 'develop' }
+                    anyOf { branch 'main'; branch 'feature' }
                     // Only update if images were pushed successfully
                     expression { currentBuild.result != 'FAILURE' }
                 }
@@ -256,7 +256,7 @@ pipeline {
         stage('Deploy') {
             when {
                 allOf {
-                    anyOf { branch 'main'; branch 'develop' }
+                    anyOf { branch 'main'; branch 'feature' }
                     // Only deploy if all previous stages were successful
                     expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
                 }
