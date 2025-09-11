@@ -233,11 +233,11 @@ pipeline {
                             export CORS_ALLOWED_METHODS="GET,POST,PUT,DELETE,OPTIONS,PATCH"
                             export CORS_ALLOWED_HEADERS="*"
 
-                            # Ensure latest images for provided tags
-                            docker compose pull || true
-
                             # Stop all containers
                             docker compose down || true
+
+                            # Ensure latest images for provided tags
+                            docker compose pull || true
                             
                             # Deploy with updated docker-compose.yml
                             docker compose up -d
