@@ -14,11 +14,6 @@ pipeline {
     }
 
     stages {
-        stage('Check skip-ci') {
-            steps {
-                scmSkip(deleteBuild: true, skipPattern: '.*\\[skip ci\\].*')
-            }
-        }
         
         stage('Cleanup Workspace') {
             steps {
