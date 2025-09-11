@@ -14,7 +14,39 @@ pipeline {
     }
 
     stages {
-        
+        stage('Preflight - Skip') {
+            steps {
+                script {
+                    def msgs = currentBuild.changeSets.collectMany { cs -> cs.items*.msg }.join('\n')
+                    def authors = currentBuild.changeSets.collectMany { cs -> cs.items*.author?.fullName }.findAll { it }.unique()
+                    def files = []
+                    currentBuild.changeSets.each { cs -> cs.items.each { it.affectedFiles.each { files << it.path } } }
+
+                    if (msgs =~ /(?i)\[skip ci\]/) {
+                        echo 'Skip: [skip ci]'
+                        currentBuild.result = 'NOT_BUILT'
+                        error('SKIP')
+                    }
+
+                    if (authors.any { it.equalsIgnoreCase('Jenkins CI') || it.endsWith('[bot]') }) {
+                        echo "Skip: bot ${authors}"
+                        currentBuild.result = 'NOT_BUILT'
+                        error('SKIP')
+                    }
+
+                    def relevant = files.any { p ->
+                        p == 'Jenkinsfile' || p == 'docker-compose.yml' ||
+                        p.startsWith('backend/') || p.startsWith('frontend/')
+                    }
+                    if (!relevant) {
+                        echo 'Skip: no relevant file changes'
+                        currentBuild.result = 'NOT_BUILT'
+                        error('SKIP')
+                    }
+                }
+            }
+        }
+
         stage('Cleanup Workspace') {
             steps {
                 script {
@@ -135,8 +167,11 @@ pipeline {
         
         stage('Push Docker Images') {
             when {
-                // Only push if Docker login was successful
-                expression { currentBuild.result != 'FAILURE' }
+                allOf {
+                    anyOf { branch 'main'; branch 'develop' }
+                    // Only push if Docker login was successful
+                    expression { currentBuild.result != 'FAILURE' }
+                }
             }
             parallel {
                 stage('Push Backend Image') {
@@ -158,8 +193,11 @@ pipeline {
         
         stage('Update Docker Compose') {
             when {
-                // Only update if images were pushed successfully
-                expression { currentBuild.result != 'FAILURE' }
+                allOf {
+                    anyOf { branch 'main'; branch 'develop' }
+                    // Only update if images were pushed successfully
+                    expression { currentBuild.result != 'FAILURE' }
+                }
             }
             steps {
                 script {
@@ -204,8 +242,11 @@ pipeline {
         
         stage('Deploy') {
             when {
-                // Only deploy if all previous stages were successful
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
+                allOf {
+                    anyOf { branch 'main'; branch 'develop' }
+                    // Only deploy if all previous stages were successful
+                    expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
+                }
             }
             steps {
                 script {
