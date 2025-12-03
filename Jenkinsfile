@@ -4,9 +4,9 @@
 pipeline {
     agent any
     
-    options {
+ //   options {
        // skipStagesAfterUnstable()
-    }
+ //}
 
     environment {
         DockerHubUser = 'shaheen8954'
