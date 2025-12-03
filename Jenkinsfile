@@ -170,7 +170,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Warning: Trivy scan failed: ${e.message}"
                                 // Continue the build even if the scan fails
-                                currentBuild.result = 'STABLE'
+                                currentBuild.result = 'UNSTABLE'
                             }
                         }
                     }
