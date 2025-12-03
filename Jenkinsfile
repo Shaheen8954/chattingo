@@ -5,7 +5,7 @@ pipeline {
     agent any
     
     options {
-        skipStagesAfterUnstable()
+       // skipStagesAfterUnstable()
     }
 
     environment {
@@ -50,11 +50,11 @@ pipeline {
                         p == 'Jenkinsfile' || p == 'docker-compose.yml' ||
                         p.startsWith('backend/') || p.startsWith('frontend/')
                     }
-                    if (!relevant) {
-                        echo 'Skip: no relevant file changes'
-                        unstable('Preflight: no relevant file changes')
-                        return
-                    }
+                  //  if (!relevant) {
+                   //     echo 'Skip: no relevant file changes'
+                 //       unstable('Preflight: no relevant file changes')
+                  //      return
+                 //   }
                 }
             }
         }
